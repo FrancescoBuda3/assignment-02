@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.dependency.analyser</groupId>
-  <artifactId>starter</artifactId>
+  <artifactId>async-java</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
@@ -32,11 +32,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>com.github.javaparser</groupId>
-        <artifactId>javaparser-symbol-solver-core</artifactId>
-        <version>3.26.4</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -60,6 +55,11 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-reactive-streams</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.javaparser</groupId>
+      <artifactId>javaparser-symbol-solver-core</artifactId>
+      <version>3.26.4</version>
     </dependency>
   </dependencies>
 
