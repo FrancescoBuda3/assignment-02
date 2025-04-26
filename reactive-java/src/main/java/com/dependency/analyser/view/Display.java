@@ -1,6 +1,10 @@
 package com.dependency.analyser.view;
 
 import com.dependency.analyser.logic.Parser;
+
+import io.reactivex.rxjava3.core.BackpressureStrategy;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.FlowableEmitter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import com.mxgraph.layout.mxParallelEdgeLayout;
@@ -19,6 +23,7 @@ public class Display {
     private JTextArea outputArea;
     private JLabel classCounterLabel;
     private JLabel depCounterLabel;
+    private JProgressBar progressBar;
     private mxGraph graph;
     private Object parent;
 
@@ -46,14 +51,21 @@ public class Display {
         this.outputArea = new JTextArea(15, 40);
         this.outputArea.setEditable(false);
 
+        this.progressBar = new JProgressBar();
+        this.progressBar.setMinimum(0);
+        this.progressBar.setMaximum(100);
+        this.progressBar.setValue(0);
+        this.progressBar.setStringPainted(true);
+
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.add(selectButton);
         controlPanel.add(folderLabel);
         controlPanel.add(startButton);
-        controlPanel.add(classCounterLabel);
-        controlPanel.add(depCounterLabel);
-        controlPanel.add(new JScrollPane(outputArea));
+        controlPanel.add(this.classCounterLabel);
+        controlPanel.add(this.depCounterLabel);
+        controlPanel.add(this.progressBar);
+        controlPanel.add(new JScrollPane(this.outputArea));
 
         frame.add(controlPanel, BorderLayout.WEST);
 
@@ -87,53 +99,61 @@ public class Display {
     private void startAnalysis(Path root) {
         this.graph.getModel().beginUpdate();
         try {
-            this.outputArea.setText("");
-            this.classCounter = 0;
-            this.allDependencies.clear();
-            this.nodeMap.clear();
+            outputArea.setText("");
+            classCounter = 0;
+            allDependencies.clear();
+            nodeMap.clear();
             mxHierarchicalLayout treeLayout = new mxHierarchicalLayout(this.graph);
             mxParallelEdgeLayout parallelLayout = new mxParallelEdgeLayout(this.graph);
 
-            this.parser.analyse(root)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.trampoline())
-                .subscribe(info -> SwingUtilities.invokeLater(() -> {
-                    classCounter++;
-                    allDependencies.addAll(info.dependencies);
+            Flowable.create((FlowableEmitter<Integer> emitter) -> {
+                this.parser.analyse(root, emitter)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.trampoline())
+                    .subscribe(info -> SwingUtilities.invokeLater(() -> {
+                        classCounter++;
+                        allDependencies.addAll(info.dependencies);
 
-                    classCounterLabel.setText("Classes/Interfaces: " + classCounter);
-                    depCounterLabel.setText("Dependencies found: " + allDependencies.size());
+                        classCounterLabel.setText("Classes/Interfaces: " + classCounter);
+                        depCounterLabel.setText("Dependencies found: " + allDependencies.size());
 
-                    String fullName = info.packageName + "." + info.className;
+                        String fullName = info.packageName + "." + info.className;
 
-                    outputArea.append("📦 " + fullName + "\n");
+                        outputArea.append("📦 " + fullName + "\n");
 
-                    Object classNode = nodeMap.get(fullName);
-                    if (classNode == null) {
-                        classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
-                        graph.getModel().setValue(classNode, info.className);
-                        nodeMap.put(fullName, classNode);
-                    }
-
-                    for (String dep : info.dependencies) {
-                        Object depNode = nodeMap.get(dep);
-                        if (depNode == null) {
-                            depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
-                            graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
-                            nodeMap.put(dep, depNode);
+                        // --- Gestione nodo della classe principale ---
+                        Object classNode = nodeMap.get(fullName);
+                        if (classNode == null) {
+                            classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
+                            graph.getModel().setValue(classNode, info.className);
+                            nodeMap.put(fullName, classNode);
                         }
 
-                        graph.insertEdge(parent, null, "", classNode, depNode);
+                        // --- Gestione nodi delle dipendenze ---
+                        for (String dep : info.dependencies) {
+                            Object depNode = nodeMap.get(dep);
+                            if (depNode == null) {
+                                depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
+                                graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
+                                nodeMap.put(dep, depNode);
+                            }
 
-                        outputArea.append("   ↳ " + dep + "\n");
-                    }
-                    this.outputArea.append("\n");
+                            graph.insertEdge(parent, null, "", classNode, depNode);
 
-                    treeLayout.execute(this.parent);
-                    parallelLayout.execute(this.parent);
-                }));
+                            outputArea.append("   ↳ " + dep + "\n");
+                        }
+
+                        treeLayout.execute(parent);
+                        parallelLayout.execute(parent);
+
+                        outputArea.append("\n");
+                    }));
+            }, BackpressureStrategy.BUFFER)
+            .subscribe(progress -> SwingUtilities.invokeLater(() -> {
+                progressBar.setValue(progress);
+            }));
         } finally {
-            this.graph.getModel().endUpdate();
+            graph.getModel().endUpdate();
         }
     }
 }
