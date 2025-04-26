@@ -1,7 +1,14 @@
 package com.dependency.analyser.view;
 
 import com.dependency.analyser.logic.Parser;
+
+import io.reactivex.rxjava3.core.BackpressureStrategy;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.FlowableEmitter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+
+import com.mxgraph.layout.mxParallelEdgeLayout;
+import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
 
@@ -16,11 +23,13 @@ public class Display {
     private JTextArea outputArea;
     private JLabel classCounterLabel;
     private JLabel depCounterLabel;
+    private JProgressBar progressBar;
     private mxGraph graph;
     private Object parent;
 
     private int classCounter = 0;
     private Set<String> allDependencies = new HashSet<>();
+    private Map<String, Object> nodeMap = new HashMap<>();
 
     public Display(Parser parser) {
         this.parser = parser;
@@ -36,26 +45,33 @@ public class Display {
 
         JButton startButton = new JButton("Start Analysis");
 
-        classCounterLabel = new JLabel("Classes/Interfaces: 0");
-        depCounterLabel = new JLabel("Dependencies found: 0");
+        this.classCounterLabel = new JLabel("Classes/Interfaces: 0");
+        this.depCounterLabel = new JLabel("Dependencies found: 0");
 
-        outputArea = new JTextArea(15, 40);
-        outputArea.setEditable(false);
+        this.outputArea = new JTextArea(15, 40);
+        this.outputArea.setEditable(false);
+
+        this.progressBar = new JProgressBar();
+        this.progressBar.setMinimum(0);
+        this.progressBar.setMaximum(100);
+        this.progressBar.setValue(0);
+        this.progressBar.setStringPainted(true);
 
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.add(selectButton);
         controlPanel.add(folderLabel);
         controlPanel.add(startButton);
-        controlPanel.add(classCounterLabel);
-        controlPanel.add(depCounterLabel);
-        controlPanel.add(new JScrollPane(outputArea));
+        controlPanel.add(this.classCounterLabel);
+        controlPanel.add(this.depCounterLabel);
+        controlPanel.add(this.progressBar);
+        controlPanel.add(new JScrollPane(this.outputArea));
 
         frame.add(controlPanel, BorderLayout.WEST);
 
-        graph = new mxGraph();
-        parent = graph.getDefaultParent();
-        mxGraphComponent graphComponent = new mxGraphComponent(graph);
+        this.graph = new mxGraph();
+        this.parent = this.graph.getDefaultParent();
+        mxGraphComponent graphComponent = new mxGraphComponent(this.graph);
         frame.add(graphComponent, BorderLayout.CENTER);
 
         final Path[] selectedPath = new Path[1];
@@ -76,42 +92,66 @@ public class Display {
         });
 
         frame.pack();
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
     }
 
     private void startAnalysis(Path root) {
-        graph.getModel().beginUpdate();
+        this.graph.getModel().beginUpdate();
         try {
             outputArea.setText("");
             classCounter = 0;
             allDependencies.clear();
+            nodeMap.clear();
+            mxHierarchicalLayout treeLayout = new mxHierarchicalLayout(this.graph);
+            mxParallelEdgeLayout parallelLayout = new mxParallelEdgeLayout(this.graph);
 
-            this.parser.analyse(root)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.trampoline())
-                .subscribe(info -> SwingUtilities.invokeLater(() -> {
-                    classCounter++;
-                    allDependencies.addAll(info.dependencies);
+            Flowable.create((FlowableEmitter<Integer> emitter) -> {
+                this.parser.analyse(root, emitter)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.trampoline())
+                    .subscribe(info -> SwingUtilities.invokeLater(() -> {
+                        classCounter++;
+                        allDependencies.addAll(info.dependencies);
 
-                    classCounterLabel.setText("Classes/Interfaces: " + classCounter);
-                    depCounterLabel.setText("Dependencies found: " + allDependencies.size());
+                        classCounterLabel.setText("Classes/Interfaces: " + classCounter);
+                        depCounterLabel.setText("Dependencies found: " + allDependencies.size());
 
-                    String fullName = info.packageName + "." + info.className;
-                    outputArea.append("📦 " + fullName + "\n");
+                        String fullName = info.packageName + "." + info.className;
 
-                    Object classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
-                    graph.getModel().setValue(classNode, info.className);
+                        outputArea.append("📦 " + fullName + "\n");
 
-                    for (String dep : info.dependencies) {
-                        Object depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
-                        graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
+                        // --- Gestione nodo della classe principale ---
+                        Object classNode = nodeMap.get(fullName);
+                        if (classNode == null) {
+                            classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
+                            graph.getModel().setValue(classNode, info.className);
+                            nodeMap.put(fullName, classNode);
+                        }
 
-                        graph.insertEdge(parent, null, "", classNode, depNode);
-                        outputArea.append("   ↳ " + dep + "\n");
-                    }
+                        // --- Gestione nodi delle dipendenze ---
+                        for (String dep : info.dependencies) {
+                            Object depNode = nodeMap.get(dep);
+                            if (depNode == null) {
+                                depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
+                                graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
+                                nodeMap.put(dep, depNode);
+                            }
 
-                    outputArea.append("\n");
-                }));
+                            graph.insertEdge(parent, null, "", classNode, depNode);
+
+                            outputArea.append("   ↳ " + dep + "\n");
+                        }
+
+                        treeLayout.execute(parent);
+                        parallelLayout.execute(parent);
+
+                        outputArea.append("\n");
+                    }));
+            }, BackpressureStrategy.BUFFER)
+            .subscribe(progress -> SwingUtilities.invokeLater(() -> {
+                progressBar.setValue(progress);
+            }));
         } finally {
             graph.getModel().endUpdate();
         }
