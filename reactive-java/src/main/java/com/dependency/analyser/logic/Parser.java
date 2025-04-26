@@ -16,6 +16,11 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import io.reactivex.rxjava3.core.Flowable;
 
 public class Parser {
+    JavaParser parser;
+
+    public Parser() {
+        this.parser = new JavaParser();
+    }
 
     public class DependencyInfo {
         public final String className;
@@ -39,8 +44,14 @@ public class Parser {
         })
                 .filter(p -> p.toString().endsWith(".java"))
                 .map(file -> {
-                    JavaParser parser = new JavaParser();
-                    ParseResult<CompilationUnit> result = parser.parse(file);
+                    // Simulate a delay for the sake of the example
+                    // try {
+                    //     Thread.sleep(300);
+                    // } catch (InterruptedException e) {
+                    //     e.printStackTrace();
+                    // }
+
+                    ParseResult<CompilationUnit> result = this.parser.parse(file);
                     Set<String> imports = new HashSet<>();
                     String className = "";
                     String packageName = "";

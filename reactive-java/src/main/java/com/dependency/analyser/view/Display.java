@@ -2,6 +2,9 @@ package com.dependency.analyser.view;
 
 import com.dependency.analyser.logic.Parser;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+
+import com.mxgraph.layout.mxParallelEdgeLayout;
+import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
 
@@ -21,6 +24,7 @@ public class Display {
 
     private int classCounter = 0;
     private Set<String> allDependencies = new HashSet<>();
+    private Map<String, Object> nodeMap = new HashMap<>();
 
     public Display(Parser parser) {
         this.parser = parser;
@@ -36,11 +40,11 @@ public class Display {
 
         JButton startButton = new JButton("Start Analysis");
 
-        classCounterLabel = new JLabel("Classes/Interfaces: 0");
-        depCounterLabel = new JLabel("Dependencies found: 0");
+        this.classCounterLabel = new JLabel("Classes/Interfaces: 0");
+        this.depCounterLabel = new JLabel("Dependencies found: 0");
 
-        outputArea = new JTextArea(15, 40);
-        outputArea.setEditable(false);
+        this.outputArea = new JTextArea(15, 40);
+        this.outputArea.setEditable(false);
 
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
@@ -53,9 +57,9 @@ public class Display {
 
         frame.add(controlPanel, BorderLayout.WEST);
 
-        graph = new mxGraph();
-        parent = graph.getDefaultParent();
-        mxGraphComponent graphComponent = new mxGraphComponent(graph);
+        this.graph = new mxGraph();
+        this.parent = this.graph.getDefaultParent();
+        mxGraphComponent graphComponent = new mxGraphComponent(this.graph);
         frame.add(graphComponent, BorderLayout.CENTER);
 
         final Path[] selectedPath = new Path[1];
@@ -76,15 +80,19 @@ public class Display {
         });
 
         frame.pack();
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
     }
 
     private void startAnalysis(Path root) {
-        graph.getModel().beginUpdate();
+        this.graph.getModel().beginUpdate();
         try {
-            outputArea.setText("");
-            classCounter = 0;
-            allDependencies.clear();
+            this.outputArea.setText("");
+            this.classCounter = 0;
+            this.allDependencies.clear();
+            this.nodeMap.clear();
+            mxHierarchicalLayout treeLayout = new mxHierarchicalLayout(this.graph);
+            mxParallelEdgeLayout parallelLayout = new mxParallelEdgeLayout(this.graph);
 
             this.parser.analyse(root)
                 .subscribeOn(Schedulers.io())
@@ -97,23 +105,35 @@ public class Display {
                     depCounterLabel.setText("Dependencies found: " + allDependencies.size());
 
                     String fullName = info.packageName + "." + info.className;
+
                     outputArea.append("📦 " + fullName + "\n");
 
-                    Object classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
-                    graph.getModel().setValue(classNode, info.className);
-
-                    for (String dep : info.dependencies) {
-                        Object depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
-                        graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
-
-                        graph.insertEdge(parent, null, "", classNode, depNode);
-                        outputArea.append("   ↳ " + dep + "\n");
+                    Object classNode = nodeMap.get(fullName);
+                    if (classNode == null) {
+                        classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
+                        graph.getModel().setValue(classNode, info.className);
+                        nodeMap.put(fullName, classNode);
                     }
 
-                    outputArea.append("\n");
+                    for (String dep : info.dependencies) {
+                        Object depNode = nodeMap.get(dep);
+                        if (depNode == null) {
+                            depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
+                            graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
+                            nodeMap.put(dep, depNode);
+                        }
+
+                        graph.insertEdge(parent, null, "", classNode, depNode);
+
+                        outputArea.append("   ↳ " + dep + "\n");
+                    }
+                    this.outputArea.append("\n");
+
+                    treeLayout.execute(this.parent);
+                    parallelLayout.execute(this.parent);
                 }));
         } finally {
-            graph.getModel().endUpdate();
+            this.graph.getModel().endUpdate();
         }
     }
 }
