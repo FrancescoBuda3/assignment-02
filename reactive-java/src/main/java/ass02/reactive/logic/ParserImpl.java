@@ -1,4 +1,4 @@
-package com.dependency.analyser.logic;
+package ass02.reactive.logic;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,25 +17,14 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.FlowableEmitter;
 
-public class Parser {
+public class ParserImpl implements Parser {
     JavaParser parser;
 
-    public Parser() {
+    public ParserImpl() {
         this.parser = new JavaParser();
     }
 
-    public class DependencyInfo {
-        public final String className;
-        public final String packageName;
-        public final Set<String> dependencies;
-
-        public DependencyInfo(String className, String packageName, Set<String> dependencies) {
-            this.className = className;
-            this.packageName = packageName;
-            this.dependencies = dependencies;
-        }
-    }
-
+    @Override
     public Flowable<DependencyInfo> analyse(Path rootFolder, FlowableEmitter<Integer> emitter) {
         AtomicLong totalFiles = new AtomicLong(0);
         try {
@@ -72,13 +61,15 @@ public class Parser {
 
                         Optional<ClassOrInterfaceDeclaration> classDecl = cu
                                 .findFirst(ClassOrInterfaceDeclaration.class);
-                        className = classDecl.map(c -> c.getNameAsString()).orElse("Anonima");
+                        className = classDecl.map(c -> c.getNameAsString())
+                                .orElse("Anonimus");
 
                         packageName = cu.getPackageDeclaration()
                                 .map(p -> p.getNameAsString())
                                 .orElse("");
 
-                        cu.findAll(ImportDeclaration.class).forEach(imp -> imports.add(imp.getNameAsString()));
+                        cu.findAll(ImportDeclaration.class)
+                            .forEach(imp -> imports.add(imp.getNameAsString()));
                     }
 
                     long processedCount = processedFiles.incrementAndGet();
