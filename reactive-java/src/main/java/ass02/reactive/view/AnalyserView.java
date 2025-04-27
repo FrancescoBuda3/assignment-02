@@ -61,6 +61,7 @@ public class AnalyserView {
         JLabel folderLabel = new JLabel("No Folder Selected");
 
         JButton startButton = new JButton("Start Analysis");
+        startButton.setEnabled(false);
 
         this.classCounterLabel = new JLabel("Classes/Interfaces: 0");
         this.depCounterLabel = new JLabel("Dependencies found: 0");
@@ -99,6 +100,7 @@ public class AnalyserView {
             if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                 selectedPath[0] = chooser.getSelectedFile().toPath();
                 folderLabel.setText(selectedPath[0].toString());
+                startButton.setEnabled(true);
             }
         });
 
@@ -117,6 +119,7 @@ public class AnalyserView {
         this.graph.getModel().beginUpdate();
         try {
             outputArea.setText("");
+            progressBar.setValue(0);
             classCounter = 0;
             allDependencies.clear();
             nodeMap.clear();
