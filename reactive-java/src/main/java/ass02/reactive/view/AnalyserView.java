@@ -1,6 +1,6 @@
-package com.dependency.analyser.view;
+package ass02.reactive.view;
 
-import com.dependency.analyser.logic.Parser;
+import ass02.reactive.logic.Parser;
 
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
@@ -12,12 +12,25 @@ import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class Display {
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+
+public class AnalyserView {
     Parser parser;
 
     private JTextArea outputArea;
@@ -31,11 +44,15 @@ public class Display {
     private Set<String> allDependencies = new HashSet<>();
     private Map<String, Object> nodeMap = new HashMap<>();
 
-    public Display(Parser parser) {
+    public AnalyserView(Parser parser) {
         this.parser = parser;
     }
 
-    public void createAndShowGUI() {
+    public void show() {
+        SwingUtilities.invokeLater(this::createAndShowGUI);
+    }
+
+    private void createAndShowGUI() {
         JFrame frame = new JFrame("Dependency Analyser");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
@@ -44,6 +61,7 @@ public class Display {
         JLabel folderLabel = new JLabel("No Folder Selected");
 
         JButton startButton = new JButton("Start Analysis");
+        startButton.setEnabled(false);
 
         this.classCounterLabel = new JLabel("Classes/Interfaces: 0");
         this.depCounterLabel = new JLabel("Dependencies found: 0");
@@ -82,6 +100,7 @@ public class Display {
             if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                 selectedPath[0] = chooser.getSelectedFile().toPath();
                 folderLabel.setText(selectedPath[0].toString());
+                startButton.setEnabled(true);
             }
         });
 
@@ -100,6 +119,7 @@ public class Display {
         this.graph.getModel().beginUpdate();
         try {
             outputArea.setText("");
+            progressBar.setValue(0);
             classCounter = 0;
             allDependencies.clear();
             nodeMap.clear();
@@ -121,7 +141,6 @@ public class Display {
 
                         outputArea.append("📦 " + fullName + "\n");
 
-                        // --- Gestione nodo della classe principale ---
                         Object classNode = nodeMap.get(fullName);
                         if (classNode == null) {
                             classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
@@ -129,7 +148,6 @@ public class Display {
                             nodeMap.put(fullName, classNode);
                         }
 
-                        // --- Gestione nodi delle dipendenze ---
                         for (String dep : info.dependencies) {
                             Object depNode = nodeMap.get(dep);
                             if (depNode == null) {
