@@ -84,6 +84,7 @@ public class AnalyserView {
 
         selectButton.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();
+            chooser.setCurrentDirectory(selectedPath[0] != null ? selectedPath[0].toFile() : null);
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                 selectedPath[0] = chooser.getSelectedFile().toPath();
