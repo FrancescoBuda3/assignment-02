@@ -10,9 +10,10 @@ public class PackageDepsReport extends SimpleReport{
 
     @Override
     public String toString() {
-        return "PackageDepsReport{ " +
-                "dependencies=" + getDependencies() +
-                " }";
+        StringBuilder sb = new StringBuilder("--- PACKAGE DEPS REPORT ---\n");
+        sb.append("Source Path: ").append(sourcePath).append("\n");
+        sb.append(super.toString());
+        return sb.toString();
     }
 
 }

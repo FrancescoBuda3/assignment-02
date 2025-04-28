@@ -10,9 +10,10 @@ public class ProjectDepsReport extends SimpleReport{
 
     @Override
     public String toString() {
-        return "ProjectDepsReport{ " +
-                "dependencies=" + getDependencies() +
-                " }";
+        StringBuilder sb = new StringBuilder("--- PROJECT DEPS REPORT ---\n");
+        sb.append("Source Path: ").append(sourcePath).append("\n");
+        sb.append(super.toString());
+        return sb.toString();
     }
 
 }

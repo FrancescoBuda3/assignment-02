@@ -5,36 +5,44 @@ import io.vertx.core.Vertx;
 public class TestDependencyAnalyserLib {
     public static void main(String[] args) {
         // Create a Vertx instance
-        Vertx vertx = Vertx.vertx();
+        Vertx vertx1 = Vertx.vertx();
         // Test the DependencyAnalyzerLib class
-        DependencyAnalyserLib analyzer = new DependencyAnalyserLib(vertx);
+        DependencyAnalyserLib analyzer = new DependencyAnalyserLib(vertx1);
         
         // Example usage of the getClassDependencies method
         String filePath = "./async/src/main/java/DependecyAnalyser/DependencyAnalyserLib.java";
         
         analyzer.getClassDependencies(filePath).onSuccess(res -> {
             System.out.println(res);
-            vertx.close();
+            vertx1.close();
         }).onFailure(err -> {
             System.err.println("Error: " + err.getMessage());
         });
 
-        // // Example usage of the getPackageDependencies method
-        // String packagePath = "./async/src/main/java/DependecyAnalyser/reportClasses";
+        Vertx vertx2 = Vertx.vertx();
+        DependencyAnalyserLib analyzer2 = new DependencyAnalyserLib(vertx2);
 
-        // analyzer.getPackageDependencies(packagePath).onSuccess(res -> {
-        //     System.out.println(res);
-        // }).onFailure(err -> {
-        //     System.err.println("Error: " + err.getMessage());
-        // });
+        // Example usage of the getPackageDependencies method
+        String packagePath = "./async/src/main/java/DependecyAnalyser/reportClasses";
 
-        // // Example usage of the getProjectDependencies method
-        // String projectPath = "./async/src";
+        analyzer2.getPackageDependencies(packagePath).onSuccess(res -> {
+            System.out.println(res);
+            vertx2.close();
+        }).onFailure(err -> {
+            System.err.println("Error: " + err.getMessage());
+        });
 
-        // analyzer.getProjectDependencies(projectPath).onSuccess(res -> {
-        //     System.out.println(res);
-        // }).onFailure(err -> {
-        //     System.err.println("Error: " + err.getMessage());
-        // });
+        Vertx vertx3 = Vertx.vertx();
+        DependencyAnalyserLib analyzer3 = new DependencyAnalyserLib(vertx3);
+
+        // Example usage of the getProjectDependencies method
+        String projectPath = "./reactive-java";
+
+        analyzer3.getProjectDependencies(projectPath).onSuccess(res -> {
+            System.out.println(res);
+            vertx3.close();
+        }).onFailure(err -> {
+            System.err.println("Error: " + err.getMessage());
+        });
     }
 }
