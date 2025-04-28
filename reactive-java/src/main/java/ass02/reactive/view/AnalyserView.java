@@ -2,9 +2,6 @@ package ass02.reactive.view;
 
 import ass02.reactive.logic.Parser;
 
-import io.reactivex.rxjava3.core.BackpressureStrategy;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.FlowableEmitter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import com.mxgraph.layout.mxParallelEdgeLayout;
@@ -25,7 +22,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
@@ -36,7 +32,6 @@ public class AnalyserView {
     private JTextArea outputArea;
     private JLabel classCounterLabel;
     private JLabel depCounterLabel;
-    private JProgressBar progressBar;
     private mxGraph graph;
     private Object parent;
 
@@ -69,12 +64,6 @@ public class AnalyserView {
         this.outputArea = new JTextArea(15, 40);
         this.outputArea.setEditable(false);
 
-        this.progressBar = new JProgressBar();
-        this.progressBar.setMinimum(0);
-        this.progressBar.setMaximum(100);
-        this.progressBar.setValue(0);
-        this.progressBar.setStringPainted(true);
-
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.add(selectButton);
@@ -82,7 +71,6 @@ public class AnalyserView {
         controlPanel.add(startButton);
         controlPanel.add(this.classCounterLabel);
         controlPanel.add(this.depCounterLabel);
-        controlPanel.add(this.progressBar);
         controlPanel.add(new JScrollPane(this.outputArea));
 
         frame.add(controlPanel, BorderLayout.WEST);
@@ -119,15 +107,13 @@ public class AnalyserView {
         this.graph.getModel().beginUpdate();
         try {
             outputArea.setText("");
-            progressBar.setValue(0);
             classCounter = 0;
             allDependencies.clear();
             nodeMap.clear();
             mxHierarchicalLayout treeLayout = new mxHierarchicalLayout(this.graph);
             mxParallelEdgeLayout parallelLayout = new mxParallelEdgeLayout(this.graph);
 
-            Flowable.create((FlowableEmitter<Integer> emitter) -> {
-                this.parser.analyse(root, emitter)
+            this.parser.analyse(root)
                     .onBackpressureBuffer(500, () -> {
                         new RuntimeException("Buffer overflow");
                     })
@@ -146,7 +132,7 @@ public class AnalyserView {
 
                         Object classNode = nodeMap.get(fullName);
                         if (classNode == null) {
-                            classNode = graph.insertVertex(parent, null, fullName, 0, 0, 120, 40);
+                            classNode = graph.insertVertex(this.parent, null, fullName, 0, 0, 120, 40);
                             graph.getModel().setValue(classNode, info.className);
                             nodeMap.put(fullName, classNode);
                         }
@@ -169,10 +155,6 @@ public class AnalyserView {
 
                         outputArea.append("\n");
                     }));
-            }, BackpressureStrategy.BUFFER)
-            .subscribe(progress -> SwingUtilities.invokeLater(() -> {
-                progressBar.setValue(progress);
-            }));
         } finally {
             graph.getModel().endUpdate();
         }
