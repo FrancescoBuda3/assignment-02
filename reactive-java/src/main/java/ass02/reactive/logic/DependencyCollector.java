@@ -63,7 +63,7 @@ public class DependencyCollector extends VoidVisitorAdapter<Object> {
     private void addType(String type) {
         if (type.contains("<")) {
             this.addType(type.substring(0, type.indexOf("<")));
-            this.addType(type.substring(type.indexOf("<") + 1, type.indexOf(">")));
+            this.addType(type.substring(type.indexOf("<") + 1, type.length() - 1));
         } else if (type.contains(",")) {
             type = type.replaceAll("\\s+", "");
             String[] types = type.split(",");
