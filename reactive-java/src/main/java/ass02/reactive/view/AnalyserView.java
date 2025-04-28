@@ -123,6 +123,8 @@ public class AnalyserView {
                     }
 
                     outputArea.append("\n");
-                }));
+                }), error -> {
+                    error.printStackTrace();
+                });
     }
 }
