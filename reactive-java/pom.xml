@@ -24,11 +24,6 @@
             <artifactId>javaparser-symbol-solver-core</artifactId>
             <version>3.26.4</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.vlsi.mxgraph</groupId>
-            <artifactId>jgraphx</artifactId>
-            <version>4.2.2</version>
-        </dependency>
     </dependencies>
 
 </project>

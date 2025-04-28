@@ -1,11 +1,10 @@
 package ass02.reactive.logic;
 
 import java.nio.file.Path;
-
-import io.reactivex.rxjava3.core.Flowable;
+import java.util.List;
 
 public interface Parser {
 
-    Flowable<DependencyInfo> analyse(Path rootFolder);
+    List<DependencyInfo> analyse(Path rootFolder);
 
 }

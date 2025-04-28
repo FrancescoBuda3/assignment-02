@@ -1,21 +1,15 @@
 package ass02.reactive.view;
 
 import ass02.reactive.logic.Parser;
-
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-
-import com.mxgraph.layout.mxParallelEdgeLayout;
-import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
-import com.mxgraph.swing.mxGraphComponent;
-import com.mxgraph.view.mxGraph;
 
 import java.awt.BorderLayout;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -32,12 +26,9 @@ public class AnalyserView {
     private JTextArea outputArea;
     private JLabel classCounterLabel;
     private JLabel depCounterLabel;
-    private mxGraph graph;
-    private Object parent;
 
     private int classCounter = 0;
     private Set<String> allDependencies = new HashSet<>();
-    private Map<String, Object> nodeMap = new HashMap<>();
 
     public AnalyserView(Parser parser) {
         this.parser = parser;
@@ -65,6 +56,7 @@ public class AnalyserView {
         this.outputArea.setEditable(false);
 
         JPanel controlPanel = new JPanel();
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.add(selectButton);
         controlPanel.add(folderLabel);
@@ -72,13 +64,7 @@ public class AnalyserView {
         controlPanel.add(this.classCounterLabel);
         controlPanel.add(this.depCounterLabel);
         controlPanel.add(new JScrollPane(this.outputArea));
-
-        frame.add(controlPanel, BorderLayout.WEST);
-
-        this.graph = new mxGraph();
-        this.parent = this.graph.getDefaultParent();
-        mxGraphComponent graphComponent = new mxGraphComponent(this.graph);
-        frame.add(graphComponent, BorderLayout.CENTER);
+        frame.add(controlPanel);
 
         final Path[] selectedPath = new Path[1];
 
@@ -100,64 +86,38 @@ public class AnalyserView {
         });
 
         frame.pack();
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setSize(500, 700);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
     private void startAnalysis(Path root) {
-        this.graph.getModel().beginUpdate();
-        try {
-            outputArea.setText("");
-            classCounter = 0;
-            allDependencies.clear();
-            nodeMap.clear();
-            mxHierarchicalLayout treeLayout = new mxHierarchicalLayout(this.graph);
-            mxParallelEdgeLayout parallelLayout = new mxParallelEdgeLayout(this.graph);
+        outputArea.setText("");
+        classCounter = 0;
+        allDependencies.clear();
 
-            this.parser.analyse(root)
-                    .onBackpressureBuffer(500, () -> {
-                        new RuntimeException("Buffer overflow");
-                    })
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.trampoline())
-                    .subscribe(info -> SwingUtilities.invokeLater(() -> {
-                        classCounter++;
-                        allDependencies.addAll(info.dependencies);
+        Flowable.fromIterable(this.parser.analyse(root))
+                .onBackpressureBuffer(500, () -> {
+                    new RuntimeException("Buffer overflow");
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.trampoline())
+                .subscribe(info -> SwingUtilities.invokeLater(() -> {
+                    classCounter++;
+                    allDependencies.addAll(info.dependencies);
 
-                        classCounterLabel.setText("Classes/Interfaces: " + classCounter);
-                        depCounterLabel.setText("Dependencies found: " + allDependencies.size());
+                    classCounterLabel.setText("Classes/Interfaces: " + classCounter);
+                    depCounterLabel.setText("Dependencies found: " + allDependencies.size());
 
-                        String fullName = info.packageName + "." + info.className;
+                    String fullName = info.packageName + "." + info.className;
 
-                        outputArea.append("📦 " + fullName + " (" + info.classType + ")" + "\n");
+                    outputArea.append("📦 " + fullName + " (" + info.classType + ")" + "\n");
 
-                        Object classNode = nodeMap.get(fullName);
-                        if (classNode == null) {
-                            classNode = graph.insertVertex(this.parent, null, fullName, 0, 0, 120, 40);
-                            graph.getModel().setValue(classNode, info.className);
-                            nodeMap.put(fullName, classNode);
-                        }
+                    for (String dep : info.dependencies) {
+                        outputArea.append("   ↳ " + dep + "\n");
+                    }
 
-                        for (String dep : info.dependencies) {
-                            Object depNode = nodeMap.get(dep);
-                            if (depNode == null) {
-                                depNode = graph.insertVertex(parent, null, dep, 0, 0, 120, 40);
-                                graph.getModel().setValue(depNode, dep.substring(dep.lastIndexOf('.') + 1));
-                                nodeMap.put(dep, depNode);
-                            }
-
-                            graph.insertEdge(parent, null, "", classNode, depNode);
-
-                            outputArea.append("   ↳ " + dep + "\n");
-                        }
-
-                        treeLayout.execute(parent);
-                        parallelLayout.execute(parent);
-
-                        outputArea.append("\n");
-                    }));
-        } finally {
-            graph.getModel().endUpdate();
-        }
+                    outputArea.append("\n");
+                }));
     }
 }
