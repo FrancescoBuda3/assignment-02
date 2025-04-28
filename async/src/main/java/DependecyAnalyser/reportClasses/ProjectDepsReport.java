@@ -4,8 +4,8 @@ import java.util.Set;
 
 public class ProjectDepsReport extends SimpleReport{
 
-    public ProjectDepsReport(Set<String> dependencies) {
-        super(dependencies);
+    public ProjectDepsReport(Set<String> dependencies, String sourcePath) {
+        super(dependencies, sourcePath);
     }
 
     @Override

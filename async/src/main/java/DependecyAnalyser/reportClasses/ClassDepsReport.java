@@ -4,15 +4,15 @@ import java.util.Set;
 
 public class ClassDepsReport extends SimpleReport {
 
-    public ClassDepsReport(Set<String> dependencies) {
-        super(dependencies);
+    public ClassDepsReport(Set<String> dependencies, String sourcePath) {
+        super(dependencies, sourcePath);
     }
 
     @Override
     public String toString() {
-        return "ClassDepsReport{ " +
-                "dependencies=" + getDependencies() +
-                " }";
+        StringBuilder sb = new StringBuilder("--- CLASS DEPS REPORT ---\n");
+        sb.append("Source Path: ").append(sourcePath).append("\n");
+        sb.append(super.toString());
+        return sb.toString();
     }
-
 }
