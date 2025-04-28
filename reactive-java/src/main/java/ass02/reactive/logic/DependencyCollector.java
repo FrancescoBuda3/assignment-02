@@ -118,26 +118,26 @@ public class DependencyCollector extends VoidVisitorAdapter<Object> {
     @Override
     public void visit(FieldDeclaration n, Object arg) {
         super.visit(n, arg);
-        n.getVariables().forEach(v -> this.addType(v.getType().asString()));
+        n.getVariables().forEach(v -> this.addType(v.getTypeAsString()));
     }
 
     @Override
     public void visit(MethodDeclaration n, Object arg) {
         super.visit(n, arg);
-        this.addType(n.getType().asString());
-        n.getParameters().forEach(p -> this.addType(p.getType().asString()));
+        this.addType(n.getTypeAsString());
+        n.getParameters().forEach(p -> this.addType(p.getTypeAsString()));
     }
 
     @Override
     public void visit(ObjectCreationExpr n, Object arg) {
         super.visit(n, arg);
-        this.addType(n.getType().asString());
+        this.addType(n.getTypeAsString());
     }
 
     @Override
     public void visit(VariableDeclarator n, Object arg) {
         super.visit(n, arg);
-        this.addType(n.getType().asString());
+        this.addType(n.getTypeAsString());
     }
 
     @Override
