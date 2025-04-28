@@ -3,7 +3,7 @@ package ass02.reactive.logic;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.function.Consumer;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
@@ -17,11 +17,11 @@ public class ParserImpl implements Parser {
     }
 
     @Override
-    public List<DependencyInfo> analyse(Path rootFolder) {
+    public void analyse(Path rootFolder, Consumer<DependencyInfo> sendUpdate) {
         try {
-            return Files.walk(rootFolder)
+            Files.walk(rootFolder)
                     .filter(p -> p.toString().endsWith(".java"))
-                    .map(file -> {
+                    .forEach(file -> {
                         ParseResult<CompilationUnit> result = null;
                         try {
                             result = this.parser.parse(file);
@@ -35,11 +35,10 @@ public class ParserImpl implements Parser {
                             collector.visit(cu, null);
                         }
 
-                        return collector.getInfos();
-                    }).toList();
+                        sendUpdate.accept(collector.getInfos());
+                    });
         } catch (IOException e) {
             new RuntimeException();
-            return null;
         }
     }
 }

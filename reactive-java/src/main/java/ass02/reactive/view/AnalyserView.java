@@ -1,6 +1,8 @@
 package ass02.reactive.view;
 
+import ass02.reactive.logic.DependencyInfo;
 import ass02.reactive.logic.Parser;
+import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -96,7 +98,10 @@ public class AnalyserView {
         classCounter = 0;
         allDependencies.clear();
 
-        Flowable.fromIterable(this.parser.analyse(root))
+        Flowable<DependencyInfo> source = Flowable.create(emitter -> {
+            this.parser.analyse(root, emitter::onNext);
+        }, BackpressureStrategy.BUFFER);
+        source
                 .onBackpressureBuffer(500, () -> {
                     new RuntimeException("Buffer overflow");
                 })

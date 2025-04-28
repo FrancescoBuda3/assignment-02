@@ -1,10 +1,10 @@
 package ass02.reactive.logic;
 
 import java.nio.file.Path;
-import java.util.List;
+import java.util.function.Consumer;
 
 public interface Parser {
 
-    List<DependencyInfo> analyse(Path rootFolder);
+    void analyse(Path rootFolder, Consumer<DependencyInfo> sendUpdate);
 
 }
