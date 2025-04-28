@@ -26,11 +26,11 @@ public class ProjectParser {
     public Future<Set<String>> getImportsFromJavaFile(String file) {
         return this.parse(file)
             .compose(ast -> this.vertx
-                .executeBlocking(() -> ast
-                    .getImports()
-                    .stream()
-                    .map(i -> i.getNameAsString())
-                    .collect(Collectors.toSet())
+                .executeBlocking(() -> {
+                    DependencyCollector collector = new DependencyCollector();
+                    collector.visit(ast, null);
+                    return collector.getInfos().dependencies.stream().collect(Collectors.toSet());
+                }
                 )
             );
     }
