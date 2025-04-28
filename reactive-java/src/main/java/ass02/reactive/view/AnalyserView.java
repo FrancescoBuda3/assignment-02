@@ -128,6 +128,9 @@ public class AnalyserView {
 
             Flowable.create((FlowableEmitter<Integer> emitter) -> {
                 this.parser.analyse(root, emitter)
+                    .onBackpressureBuffer(500, () -> {
+                        new RuntimeException("Buffer overflow");
+                    })
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.trampoline())
                     .subscribe(info -> SwingUtilities.invokeLater(() -> {
@@ -139,7 +142,7 @@ public class AnalyserView {
 
                         String fullName = info.packageName + "." + info.className;
 
-                        outputArea.append("📦 " + fullName + "\n");
+                        outputArea.append("📦 " + fullName + " (" + info.classType + ")" + "\n");
 
                         Object classNode = nodeMap.get(fullName);
                         if (classNode == null) {
