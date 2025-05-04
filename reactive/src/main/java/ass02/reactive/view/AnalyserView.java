@@ -1,7 +1,7 @@
 package ass02.reactive.view;
 
-import ass02.reactive.logic.DependencyInfo;
-import ass02.reactive.logic.Parser;
+import ass02.reactive.logic.ReactiveParser;
+import ass02.reactive.logic.common.DependencyInfo;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -22,8 +22,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+/**
+ * This class provides a GUI for the Dependency Analyser.
+ * It allows the user to select a project root folder and start the analysis.
+ * The results are displayed dynamically in a text area.
+ */
 public class AnalyserView {
-    Parser parser;
+    ReactiveParser parser;
 
     private JTextArea outputArea;
     private JLabel classCounterLabel;
@@ -32,10 +37,13 @@ public class AnalyserView {
     private int classCounter = 0;
     private Set<String> allDependencies = new HashSet<>();
 
-    public AnalyserView(Parser parser) {
+    public AnalyserView(ReactiveParser parser) {
         this.parser = parser;
     }
 
+    /**
+     * This method creates and shows the GUI.
+     */
     public void show() {
         SwingUtilities.invokeLater(this::createAndShowGUI);
     }

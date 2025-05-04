@@ -9,10 +9,13 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 
-public class ParserImpl implements Parser {
+import ass02.reactive.logic.common.DependencyCollector;
+import ass02.reactive.logic.common.DependencyInfo;
+
+public class ReactiveParserImpl implements ReactiveParser {
     JavaParser parser;
 
-    public ParserImpl() {
+    public ReactiveParserImpl() {
         this.parser = new JavaParser();
     }
 

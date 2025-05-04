@@ -1,4 +1,4 @@
-package DependecyAnalyser.reportClasses;
+package DependecyAnalyser.report;
 
 import java.util.Set;
 

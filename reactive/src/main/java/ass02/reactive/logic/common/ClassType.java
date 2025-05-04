@@ -1,5 +1,9 @@
-package ass02.reactive.logic;
+package ass02.reactive.logic.common;
 
+/**
+ * Enum representing different types of classes.
+ * This enum is used to categorize classes in the system.
+ */
 public enum ClassType {
     CLASS, INTERFACE, ENUM, ABSTRACT_CLASS;
 

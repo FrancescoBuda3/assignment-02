@@ -1,8 +1,8 @@
 package DependecyAnalyser;
 
-import DependecyAnalyser.reportClasses.ClassDepsReport;
-import DependecyAnalyser.reportClasses.PackageDepsReport;
-import DependecyAnalyser.reportClasses.ProjectDepsReport;
+import DependecyAnalyser.report.ClassDepsReport;
+import DependecyAnalyser.report.PackageDepsReport;
+import DependecyAnalyser.report.ProjectDepsReport;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
@@ -51,13 +51,13 @@ public class DependencyAnalyserLib {
         });
     }
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
 }

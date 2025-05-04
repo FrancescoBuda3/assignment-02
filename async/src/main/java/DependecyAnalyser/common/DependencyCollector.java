@@ -1,4 +1,4 @@
-package DependecyAnalyser;
+package DependecyAnalyser.common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,12 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.type.TypeParameter;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
+/**
+ * This class is used to collect the dependencies of a Java class.
+ * It extends the VoidVisitorAdapter class from the JavaParser library.
+ * The class visits different nodes in the AST (Abstract Syntax Tree) and
+ * collects information about the class, its package, imports, and dependencies.
+ */
 public class DependencyCollector extends VoidVisitorAdapter<Object> {
     private List<String> classNames;
     private ClassType classType;
@@ -30,6 +36,12 @@ public class DependencyCollector extends VoidVisitorAdapter<Object> {
         this.types = new ArrayList<>();
     }
 
+    /**
+     * This method returns a DependencyInfo object containing the class name,
+     * class type, package name, and all the dependencies of the class.
+     *
+     * @return DependencyInfo object
+     */
     public DependencyInfo getInfos() {
         return new DependencyInfo(
                 this.getClassName(),

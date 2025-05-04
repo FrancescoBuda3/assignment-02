@@ -1,4 +1,4 @@
-package DependecyAnalyser.reportClasses;
+package DependecyAnalyser.report;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,5 +37,5 @@ public class SimpleReport implements Report {
         }
         return sb.toString();
     }
-    
+
 }
