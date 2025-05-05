@@ -8,10 +8,10 @@ public class TestDependencyAnalyserLib {
         Vertx vertx1 = Vertx.vertx();
         // Test the DependencyAnalyzerLib class
         DependencyAnalyserLib analyzer = new DependencyAnalyserLib(vertx1);
-        
+
         // Example usage of the getClassDependencies method
         String filePath = "./async/src/main/java/DependecyAnalyser/DependencyAnalyserLib.java";
-        
+
         analyzer.getClassDependencies(filePath).onSuccess(res -> {
             System.out.println(res);
             vertx1.close();
@@ -23,7 +23,7 @@ public class TestDependencyAnalyserLib {
         DependencyAnalyserLib analyzer2 = new DependencyAnalyserLib(vertx2);
 
         // Example usage of the getPackageDependencies method
-        String packagePath = "./async/src/main/java/DependecyAnalyser/reportClasses";
+        String packagePath = "./async/src/main/java/DependecyAnalyser/report";
 
         analyzer2.getPackageDependencies(packagePath).onSuccess(res -> {
             System.out.println(res);
@@ -36,7 +36,7 @@ public class TestDependencyAnalyserLib {
         DependencyAnalyserLib analyzer3 = new DependencyAnalyserLib(vertx3);
 
         // Example usage of the getProjectDependencies method
-        String projectPath = "./async/";
+        String projectPath = "./reactive";
 
         analyzer3.getProjectDependencies(projectPath).onSuccess(res -> {
             System.out.println(res);

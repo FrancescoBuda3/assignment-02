@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.CompilationUnit;
 
+import DependecyAnalyser.common.DependencyCollector;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
