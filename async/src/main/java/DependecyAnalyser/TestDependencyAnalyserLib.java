@@ -36,7 +36,7 @@ public class TestDependencyAnalyserLib {
         DependencyAnalyserLib analyzer3 = new DependencyAnalyserLib(vertx3);
 
         // Example usage of the getProjectDependencies method
-        String projectPath = "./reactive-java";
+        String projectPath = "./async/";
 
         analyzer3.getProjectDependencies(projectPath).onSuccess(res -> {
             System.out.println(res);

@@ -10,6 +10,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 
+/**
+ * ProjectFileSystem is a class that provides asynchronous methods to interact with the file system of a Java project.
+ */
 public class ProjectFileSystem {
     private static final String EXTENSION = ".java";
 
@@ -19,6 +22,11 @@ public class ProjectFileSystem {
         this.fs = vertx.fileSystem();
     }
 
+    /**
+     * Check if the path is a Java file.
+     * @param path the path to the file
+     * @return a Future containing true if the path is a Java file, false otherwise
+     */
     public Future<Boolean> isJavaFile(String path) {
         if (path == null || !path.endsWith(EXTENSION)) {
             return Future.succeededFuture(false);
@@ -29,6 +37,11 @@ public class ProjectFileSystem {
         }
     }
 
+    /**
+     * Check if the path is a directory.
+     * @param path the path to the directory
+     * @return a Future containing true if the path is a directory, false otherwise
+     */
     public Future<Boolean> isDirectory(String path) {
         if (path == null) {
             return Future.succeededFuture(false);
@@ -38,6 +51,7 @@ public class ProjectFileSystem {
                 .compose(exists -> exists ? fs.props(path).map(props -> props.isDirectory()) : Future.succeededFuture(false));
         }
     }
+
 
     private Future<Set<String>> getFromDirectory(String path, Function<String, Future<Boolean>> filterFunction) {
         return fs.readDir(path).compose(files -> {
@@ -60,12 +74,22 @@ public class ProjectFileSystem {
         });
     }
 
+    /**
+     * Get the Java files in a directory.
+     * @param directory the path to the directory
+     * @return a Future containing the set of Java files in the directory
+     */
     public Future<Set<String>> getSourcesIn(String directory) {
         return getFromDirectory(directory, this::isJavaFile).compose(files -> {
             return Future.succeededFuture(files);
         });
     }
 
+    /**
+     * Get the Java files in a directory and its subdirectories.
+     * @param directory the path to the directory
+     * @return a Future containing the set of Java files in the directory and its subdirectories
+     */
     public Future<Set<String>> getDescendantsSources(String directory) {
         return this.fs
             .readDir(directory)

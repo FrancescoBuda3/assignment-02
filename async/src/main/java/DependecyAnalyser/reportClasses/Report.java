@@ -1,8 +1,33 @@
 package DependecyAnalyser.reportClasses;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
-public interface Report {
-    Set<String> getDependencies();
-    void addDependencies(Set<String> dependencies);
+/**
+ * Report is a class that represents a report of dependencies in a Java project.
+ */
+public class Report {
+    private Set<String> dependencies;
+    protected String sourcePath;
+
+    public Report(Set<String> dependencies, String sourcePath) {
+        this.dependencies = dependencies;
+        this.sourcePath = sourcePath;
+    }
+
+    @Override
+    public String toString() {
+        // sort the dependencies in alphabetical order
+        List<String> depList = new ArrayList<String>(dependencies);
+        Collections.sort(depList);
+        // pritty print the dependencies as a bullet list
+        StringBuilder sb = new StringBuilder();
+        for (String dependency : depList) {
+            sb.append(" - ").append(dependency).append("\n");
+        }
+        return sb.toString();
+    }
+    
 }

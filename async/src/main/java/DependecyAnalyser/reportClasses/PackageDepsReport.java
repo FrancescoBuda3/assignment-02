@@ -2,7 +2,10 @@ package DependecyAnalyser.reportClasses;
 
 import java.util.Set;
 
-public class PackageDepsReport extends SimpleReport{
+/**
+ * PackageDepsReport is a class that represents a report of a package's dependencies in a Java project.
+ */
+public class PackageDepsReport extends Report{
 
     public PackageDepsReport(Set<String> dependencies, String sourcePath) {
         super(dependencies, sourcePath);
