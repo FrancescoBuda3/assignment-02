@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
@@ -24,7 +23,6 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
  */
 public class DependencyCollector extends VoidVisitorAdapter<Object> {
     private List<String> classNames;
-    private ClassType classType;
     private String packageName;
     private List<String> imports;
     private List<String> types;
@@ -45,7 +43,6 @@ public class DependencyCollector extends VoidVisitorAdapter<Object> {
     public DependencyInfo getInfos() {
         return new DependencyInfo(
                 this.getClassName(),
-                this.classType,
                 this.packageName,
                 this.getDependencies());
     }
@@ -97,21 +94,7 @@ public class DependencyCollector extends VoidVisitorAdapter<Object> {
     public void visit(ClassOrInterfaceDeclaration n, Object arg) {
         super.visit(n, arg);
         this.classNames.add(n.getNameAsString());
-        this.classType = ClassType.CLASS;
-        if (n.isAbstract()) {
-            this.classType = ClassType.ABSTRACT_CLASS;
-        } else if (n.isInterface()) {
-            this.classType = ClassType.INTERFACE;
-        }
         n.getExtendedTypes().forEach(t -> this.addType(t.getNameAsString()));
-        n.getImplementedTypes().forEach(t -> this.addType(t.getNameAsString()));
-    }
-
-    @Override
-    public void visit(EnumDeclaration n, Object arg) {
-        super.visit(n, arg);
-        this.classNames.add(n.getNameAsString());
-        this.classType = ClassType.ENUM;
         n.getImplementedTypes().forEach(t -> this.addType(t.getNameAsString()));
     }
 

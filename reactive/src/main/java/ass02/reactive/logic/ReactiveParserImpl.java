@@ -25,6 +25,12 @@ public class ReactiveParserImpl implements ReactiveParser {
             Files.walk(rootFolder)
                     .filter(p -> p.toString().endsWith(".java"))
                     .forEach(file -> {
+                        // sleep to simulate long analysis
+                        // try {
+                        //     Thread.sleep(300);
+                        // } catch (InterruptedException e) {
+                        //     new RuntimeException();
+                        // }
                         ParseResult<CompilationUnit> result = null;
                         try {
                             result = this.parser.parse(file);

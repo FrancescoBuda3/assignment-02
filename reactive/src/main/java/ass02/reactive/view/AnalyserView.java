@@ -124,7 +124,7 @@ public class AnalyserView {
 
                     String fullName = info.packageName + "." + info.className;
 
-                    outputArea.append("📦 " + fullName + " (" + info.classType + ")" + "\n");
+                    outputArea.append("📦 " + fullName + "\n");
 
                     for (String dep : info.dependencies) {
                         outputArea.append("   ↳ " + dep + "\n");
