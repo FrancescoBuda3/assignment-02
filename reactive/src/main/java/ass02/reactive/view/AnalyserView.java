@@ -110,12 +110,12 @@ public class AnalyserView {
             this.parser.analyse(root, emitter::onNext);
         }, BackpressureStrategy.BUFFER);
         source
-                .onBackpressureBuffer(500, () -> {
+                .onBackpressureBuffer(100, () -> {
                     new RuntimeException("Buffer overflow");
                 })
                 .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.trampoline())
-                .subscribe(info -> SwingUtilities.invokeLater(() -> {
+                .observeOn(Schedulers.from(SwingUtilities::invokeLater))
+                .subscribe(info -> {
                     classCounter++;
                     allDependencies.addAll(info.dependencies);
 
@@ -131,7 +131,7 @@ public class AnalyserView {
                     }
 
                     outputArea.append("\n");
-                }), error -> {
+                }, error -> {
                     error.printStackTrace();
                 });
     }
