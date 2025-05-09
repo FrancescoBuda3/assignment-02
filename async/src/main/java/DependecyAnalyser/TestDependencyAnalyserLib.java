@@ -2,6 +2,11 @@ package DependecyAnalyser;
 
 import io.vertx.core.Vertx;
 
+/**
+ * @author emanuele.sanchi@studio.unibo.it
+ * @author francesco.buda3@studio.ubibo.it
+ * @author tommaso.severi2@studio.unibo.it
+ */
 public class TestDependencyAnalyserLib {
     public static void main(String[] args) {
         // Create a Vertx instance
